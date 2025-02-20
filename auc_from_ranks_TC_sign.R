@@ -36,7 +36,7 @@ function(acc_ranked,adj,n_points){
   recall_new <- c(0,recall)
   fpr <- rev(fpr)
   
-  auc <- dget("SINCERITIES functions/auc.R")
+  auc <- dget("auc.R")
   AUROC <- auc(fpr,recall)
   AUPR <- auc(recall_new,precision_new)
   
