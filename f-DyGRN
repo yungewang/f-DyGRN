@@ -155,22 +155,15 @@ process_regression <- function(DATA, distance_matrices, noDIAG = 1, penalty_type
       }  
       
       Y_vector <- matrix(Y_vector, ncol = 1)  
-      #print(paste("Target gene:", target_gene))
-      #print("Y_vector values:")
-      #print(Y_vector)
       
       if (penalty_type == "lasso") {  
-        nfold <- dim(X_matrix)[1]
-        foldid <- 1:nfold
 
-        #CV_results <- cv.glmnet(as.matrix(X_matrix), Y_vector, alpha = 1,  nfolds = 5, grouped = FALSE) 
-        CV_results <- cv.glmnet(as.matrix(X_matrix),Y_vector,alpha=1, nfolds = nfold, foldid = foldid,
-                                keep = TRUE, lower.limits=0, upper.limits=Inf, grouped = FALSE)
+        CV_results <- cv.glmnet(as.matrix(X_matrix), Y_vector, alpha = 1,  nfolds = 10, grouped = FALSE) 
         best_lambda <- CV_results$lambda.min  
         best_coefficients <- as.numeric(coef(CV_results, s = "lambda.min"))[-1]  
         
       } else if (penalty_type %in% c("SCAD", "MCP")) {  
-        CV_results <- cv.ncvreg(as.matrix(X_matrix), Y_vector, penalty = penalty_type, alpha = 1, lambda.min = 0.01, nlambda = 100)  
+        CV_results <- cv.ncvreg(as.matrix(X_matrix), Y_vector, penalty = penalty_type, alpha = 1, lambda.min = 0.01, nlambda = 100, nfolds=10)  
         best_lambda <- CV_results$lambda.min  
         best_coefficients <- coef(CV_results$fit, lambda = best_lambda)[-1]  
       } else {  
