@@ -1,5 +1,3 @@
-#SIGN can be 0 or 1
-
 function(connectivityMATRIX,genes,SIGN=0,directory=NULL,fileNAME=NULL,saveFile=FALSE){
   
   if(is.null(directory)){
