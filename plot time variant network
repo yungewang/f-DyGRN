@@ -1,0 +1,19 @@
+library(igraph)
+plot_gene_network <- function(alpha_matrix, window_label, output_folder) {
+  diag(alpha_matrix) <- 0  
+  max_value <- max(abs(alpha_matrix), na.rm = TRUE)
+  if (max_value == 0) return()
+  adj_matrix_normalized <- alpha_matrix / max_value  
+  graph <- graph_from_adjacency_matrix(t(adj_matrix_normalized), mode = "directed", weighted = TRUE)
+  
+  E(graph)$color <- ifelse(E(graph)$weight > 0, "black", "red")
+  E(graph)$lty <- ifelse(E(graph)$color == "red", 2, 1)
+  layout <- layout_in_circle(graph)
+  
+  pdf(file = file.path(output_folder, paste0("Network_", window_label, ".pdf")), width = 8, height = 6)
+  plot(graph, layout = layout, vertex.size = 20, vertex.color = "skyblue",
+       vertex.label = V(graph)$name, vertex.label.cex = 0.8, edge.arrow.size = 0.3,
+       edge.color = E(graph)$color, edge.lty = E(graph)$lty, main = window_label)
+  dev.off()
+  cat("Saved network plot:", file.path(output_folder, paste0("Network_", window_label, ".pdf")), "\n")
+}
