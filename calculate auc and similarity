@@ -1,0 +1,15 @@
+library(pracma)
+calculate_auc <- function(alpha_matrix, true_network) {
+  if (all(alpha_matrix == 0, na.rm = TRUE)) return(list(AUROC = 0, AUPR = 0))
+  alpha_matrix <- alpha_matrix / max(abs(alpha_matrix), na.rm = TRUE)
+  auc_result <- auc_from_ranks_TC_sign(alpha_matrix, true_network, 1000)
+  return(auc_result)
+}
+
+edge_overlap_similarity <- function(adj_matrix1, adj_matrix2) {
+  binary1 <- adj_matrix1 != 0
+  binary2 <- adj_matrix2 != 0
+  signed_overlap <- sum((adj_matrix1 > 0 & adj_matrix2 > 0) | (adj_matrix1 < 0 & adj_matrix2 < 0))
+  total_edges <- sum(binary1 | binary2)
+  return(signed_overlap / total_edges)
+}
