@@ -1,0 +1,74 @@
+library(R.matlab)
+# Load the 10 genes dataset
+mat <- readMat("In silico single cell data/20_nets_10genes_8UNEVENtime_sigma02B_no_initial_points2.mat")
+
+# Extract time and single-cell data
+time <- as.vector(mat$time.points)
+singleCELLdata <- list()
+for (i in 1:dim(mat$data.tot.array[[1]][[1]])[2]) {
+  singleCELLdata[[i]] <- mat$data.tot.array[[1]][[1]][, i, ]
+}
+totalDATA <- do.call(rbind, singleCELLdata)
+
+# Create the DATA object
+DATA <- list(
+  singleCELLdata = singleCELLdata,
+  time = time,
+  numGENES = ncol(singleCELLdata[[1]]),
+  totDATA = totalDATA
+)
+
+# Extract the true network
+true_network <- mat$networks[, , 1]
+
+load_20genes_data <- function() {
+  mat <- readMat("In silico single cell data/20_nets_20genes_8UNEVENtime_sigma01B_no_initial_points2.mat")
+  time <- as.vector(mat$time.points)
+  singleCELLdata <- list()
+  for (i in 1:dim(mat$data.tot.array[[1]][[1]])[2]) {
+    singleCELLdata[[i]] <- mat$data.tot.array[[1]][[1]][, i, ]
+  }
+  totalDATA <- do.call(rbind, singleCELLdata)
+  
+  DATA <- list(
+    singleCELLdata = singleCELLdata,
+    time = time,
+    numGENES = ncol(singleCELLdata[[1]]),
+    totDATA = totalDATA
+  )
+  true_network <- mat$networks[, , 1]
+  return(list(DATA = DATA, true_network = true_network))
+}
+
+# Load THP1 Dataset
+load_thp1_data <- function() {
+  uploading <- dget("SINCERITIES functions/uploading.R")
+  DATA <- uploading(filename = 'THP1 data/single_cell_kouno_data.csv')
+  
+  subGENES <- as.character(read.csv('THP1 data/SUBNET2_tomaru.csv', header = FALSE)$V1)
+  tomaru2 <- read.csv('THP1 data/tomaru2.csv', header = FALSE)
+  netINFO <- tomaru2[, -2]
+  adj_ref <- matrix(0, nrow = length(subGENES), ncol = length(subGENES))
+  
+  for (i in 1:nrow(netINFO)) {
+    idxGENEsource <- match(netINFO[i, 1], subGENES)
+    if (!is.na(idxGENEsource)) {
+      idxGENEtarget <- match(as.character(t(netINFO[i, -1])), subGENES)
+      idxGENEtarget <- idxGENEtarget[!is.na(idxGENEtarget)]
+      adj_ref[idxGENEsource, idxGENEtarget] <- 1
+    }
+  }
+  diag(adj_ref) <- 0
+  
+  idxSUBgenes <- match(subGENES, DATA$genes)
+  idxSUBgenes <- idxSUBgenes[!is.na(idxSUBgenes)]
+  DATA$numGENES <- length(idxSUBgenes)
+  DATA$genes <- DATA$genes[idxSUBgenes]
+  
+  for (i in 1:DATA$num_time_points) {
+    DATA$singleCELLdata[[i]] <- DATA$singleCELLdata[[i]][, idxSUBgenes, drop = FALSE]
+  }
+  DATA$totDATA <- DATA$totDATA[, idxSUBgenes, drop = FALSE]
+  
+  return(list(DATA = DATA, true_network = adj_ref))
+}
